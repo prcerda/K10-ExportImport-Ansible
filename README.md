@@ -110,7 +110,7 @@ All these steps will be automated using the Ansible playbooks provided for the [
 ## Parameters
 **Deployment parameters:**
 Some deployment variables must be set into the vars files.  Alter the parameters according to your needs:
-1. [For Production Cluster](playbook/prod_cluster/vars/vault_vars.yaml)
+1. [For Production Cluster](playbook/prod_cluster/vars/vault_vars.yaml) "vault_vars.yaml" in the playbook/prod_cluster/vars folder.
 	  - k10_infra: Choose between AWSEKS, AZAKS and GCGKE
 	  - aws_access_key_id: AWS Access Key to add AWS S3 bucket
 	  - aws_secret_access_key: AWS Secret Access Key to add AWS S3 bucket
@@ -121,7 +121,7 @@ Some deployment variables must be set into the vars files.  Alter the parameters
 	  - azure_storage_env: AzureCloud is the default in Azure.  More info in https://docs.kasten.io/latest/usage/configuration.html#azure-storage
 	  - project_id: Google Project ID to add Google Cloud Storage Account
 	  - LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10
-1. [For DR Cluster](playbook/dr_cluster/vars/vault_vars.yaml)
+1. [For DR Cluster](playbook/dr_cluster/vars/vault_vars.yaml)  "vault_vars.yaml" in the playbook/dr_cluster/vars folder.
 	  - k10_infra: Choose between AWSEKS, AZAKS and GCGKE
 	  - aws_access_key_id: AWS Access Key to add AWS S3 bucket
 	  - aws_secret_access_key: AWS Secret Access Key to add AWS S3 bucket
@@ -132,6 +132,8 @@ Some deployment variables must be set into the vars files.  Alter the parameters
 	  - azure_storage_env: AzureCloud is the default in Azure.  More info in https://docs.kasten.io/latest/usage/configuration.html#azure-storage
 	  - project_id: Google Project ID to add Google Cloud Storage Account
 	  - LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10
+
+**NOTE**: It is recommended to use Ansible Vaults to keep this data instead of using just a text file, considering all the sensitive data to be kept here.
 
 # Recovery duration
 
