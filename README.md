@@ -19,10 +19,10 @@ This project is an example of an deployment and meant to be used for testing and
 
 1. [Getting started](#Getting-started)
 2. [Prerequisites](#Prerequisites)
-3. [Recovering K10 and all Kubernetes Applications From a Disaster](#Recovering-K10-and-all-Kubernetes-Applications-From-a-Disaster)
-4. [Parameters](#Parameters)
-5. [Recovery duration](#Recovery-duration)
-6. [File structure and deployment workflow](#File-structure-and-deployment-workflow)
+3. [Exporting Applications on Production Kubernetes cluster](#Exporting-Applications-on-Production-Kubernetes-cluster)
+4. [Importing Applications on Production Kubernetes cluster](#Importing-Applications-on-Production-Kubernetes-cluster)
+5. [Parameters](#Parameters)
+6. [Recovery duration](#Recovery-duration)
 
 # Getting started
 
@@ -53,16 +53,16 @@ To run this project you need to have some software installed and configured:
 	- (If restoring in Google GKE) gcloud CLI and gke-gcloud-auth-plugin for use with kubectl 
 1. A working [Ansible installation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
 1. A working Kubernetes cluster with applications to be exported to another location (Production cluster).  In this project, we will provide the Ansible Playbooks for the following tasks:
-  - Installing Kasten K10 in AWS EKS, Azure EKS or Google GKE.
-  - Configuring Kasten Location Profiles to export the Applications
-  - Configuring Kasten Export/Backup policies to protect the applications running in this cluster.  "Import Data" for every policy is captured by the Ansible playbook.
+	  - Installing Kasten K10 in AWS EKS, Azure EKS or Google GKE.
+	  - Configuring Kasten Location Profiles to export the Applications
+	  - Configuring Kasten Export/Backup policies to protect the applications running in this cluster.  "Import Data" for every policy is captured by the Ansible playbook.
 
 ![Kasten DR](./docs/importing_data_details.png)	
 
 1. A working clean Kubernetes cluster to be used to import all applications from Production cluster using Kasten K10.  In this project we will provide the Ansible Playbooks for the following tasks.
-  - Installing Kasten K10 in AWS EKS, Azure EKS or Google GKE.
-  - Configuring Kasten Location Profiles containing the data of the applications to be imported.
-  - Configuring Kasten Import policies to import and restore the applications from the exported data.
+	  - Installing Kasten K10 in AWS EKS, Azure EKS or Google GKE.
+	  - Configuring Kasten Location Profiles containing the data of the applications to be imported.
+	  - Configuring Kasten Import policies to import and restore the applications from the exported data.
 1. Kasten K10 Export Policies protecting Kubernetes applications must have been run at least once to provide the required restore points for this project.
 
 ![Kasten DR](./docs/policies_migration_import.png)	
@@ -71,82 +71,68 @@ To run this project you need to have some software installed and configured:
 ## Exporting Applications on Production Kubernetes cluster
 Using K10 Export policies involves the following sequence of actions:
 
-1. [Install Kasten K10 in the Production Kubernetes cluster](playbook/prod_cluster/01_k10_install.yaml)
+1. [Install Kasten K10 in the Production Kubernetes cluster](playbook/prod_cluster/01_k10_install.yaml).  This project includes an Ansible playbook to install Kasten K10 in AWS EKS, Azure AKS or Google GKE.
 1. [Configuring Locations Profiles](playbook/prod_cluster/02_k10_loc_profiles.yaml) to provide storage resources where the applications are going to be exported to. In this project, we can create multiple Location Profiles by providing the required data in a [CSV file](playbook/prod_cluster/vars/storage.csv)
-  - profile_type (awss3, azblob, gcsa)
-  - bucket_name: The name used when the bucket was created in the Cloud Provider.
-  - profile_name: The name for the Kasten Location Profile:
-  - region: Region required for AWS and Google Cloud
+	  - profile_type (awss3, azblob, gcsa)
+	  - bucket_name: The name used when the bucket was created in the Cloud Provider.
+	  - profile_name: The name for the Kasten Location Profile:
+	  - region: Region required for AWS and Google Cloud
 1. [Configure Export Policies](playbook/prod_cluster/03_k10_create_policy.yaml) for every application running in the Production cluster.   In this project, the Policies can be created automatically IF a label has been assigned to every NAMESPACE with one of these values:
-  - backup=hourly for hourly backup
-  - backup=daily for daily backup
-  - backup=weekly for weekly backup
-  - backup=monthly for monthly backup
+	  - backup=hourly for hourly backup
+	  - backup=daily for daily backup
+	  - backup=weekly for weekly backup
+	  - backup=monthly for monthly backup
+
+**NOTE**: The Export Policies playbook will create a CSV file with the name of the applications and the import string.  This file is called "importpolicy.yaml" and it's located in [Create Policy folder](playbook/prod_cluster/createpolicy).   This file MUST be copied to this location keeping the same name: [playbook/dr_cluster/createpolicy]
 
 All these steps will be automated using the Ansible playbooks provided for the [Production Cluster](playbook/prod_cluster)
 
+**Important**: The playbooks must be run in the mentioned order in order to make the recovery process works.
+
+## Importing Applications on Production Kubernetes cluster
+Using K10 Import policies involves the following sequence of actions:
+
+1. [Install Kasten K10 in the Production Kubernetes cluster](playbook/dr_cluster/01_k10_install.yaml).  This project includes an Ansible playbook to install Kasten K10 in AWS EKS, Azure AKS or Google GKE.
+1. [Configuring Locations Profiles](playbook/dr_cluster/02_k10_loc_profiles.yaml) to provide storage resources where the applications are going to be exported to. In this project, we can create multiple Location Profiles by providing the required data in a [CSV file](playbook/prod_cluster/vars/storage.csv)
+	  - profile_type (awss3, azblob, gcsa)
+	  - bucket_name: The name used when the bucket was created in the Cloud Provider.
+	  - profile_name: The name for the Kasten Location Profile:
+	  - region: Region required for AWS and Google Cloud
+1. [Configure Import Policies](playbook/dr_cluster/03_k10_create_imports.yaml) for every application to be imported in the DR Cluster.   In this project, the Ansible playbook will run the following actions:
+	  - Create the import policy for every application exported and registered in the [Import Policy CSV file](playbook/dr_cluster/createpolicy/importpolicy.yaml)
+	  - Add the Import String from the same CSV File.
+	  - Set the Import Policy to restore the entire app and its data after importing it.
+
+All these steps will be automated using the Ansible playbooks provided for the [Production Cluster](playbook/prod_cluster)
+
+**Important**: The playbooks must be run in the mentioned order in order to make the recovery process works.
+
 ## Parameters
-
 **Deployment parameters:**
-
 Some deployment variables must be set into the vars files.  Alter the parameters according to your needs:
-1. For AWS EKS [playbook/aws_eks/vars/k10s3dr_vars.yaml](playbook/aws_eks/vars/k10s3dr_vars.yaml)
-	- aws_access_key_id: AWS Access Key ID
-	- aws_secret_access_key: AWS Secret Access Key
-	- bucket_name: Name of the AWS S3 bucket containing the Kasten DR Backup
-	- profile_name: Name of the Location Profile to be created in Kasten
-	- region: Bucket Region when applicable 
-	- passphrase: Passphrase used when enabling Kasten DR feature
-	- clusterid: Cluster ID can be got from K10 when enabling Kasten DR feature
-	- secret_name: Name of the secret to be created with Google Clous Storage Account Key
-	- LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10, then the result must be provided in this variable.
-1. For Azure AKS [playbook/azure_aks/vars/k10aksdr_vars.yaml](playbook/azure_aks/vars/k10aksdr_vars.yaml)
-	- tenantID: Azure Tenant ID
-	- azureclientID: Azure Client ID
-	- Azureclientsecret: Azure Client Secret
-	- azure_storage_key: Azure Storage Access Key 
-	- azure_storage_env: AzureCloud is the default in Azure.  More info in https://docs.kasten.io/latest/usage/configuration.html#azure-storage
-	- bucket_name: Name of the Azure Blob Storage containing the Kasten DR Backup
-	- profile_name: Name of the Location Profile to be created in Kasten
-	- passphrase: Passphrase used when enabling Kasten DR feature
-	- clusterid: Cluster ID can be got from K10 when enabling Kasten DR feature
-	- secret_name: Name of the secret to be created with Azure Client secret
-	- LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10, then the result must be provided in this variable.
-1. For Google Cloud GKE [playbook/google_gke/vars/k10gkedr_vars.yaml](playbook/google_gke/vars/k10gkedr_vars.yaml)
-	- project_id: Google Cloud Project ID
-	- bucket_name: Name of the Google Cloud Storage Account containing the Kasten DR Backup
-	- profile_name: Name of the Location Profile to be created in Kasten
-	- region: Bucket Region when applicable 
-	- passphrase: Passphrase used when enabling Kasten DR feature
-	- clusterid: Cluster ID can be got from K10 when enabling Kasten DR feature
-	- secret_name: Name of the secret to be created with Google Clous Storage Account Key
-	- LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10, then the result must be provided in this variable.
-
-
+1. [For Production Cluster](playbook/prod_cluster/vars/vault_vars.yaml)
+	  - k10_infra: Choose between AWSEKS, AZAKS and GCGKE
+	  - aws_access_key_id: AWS Access Key to add AWS S3 bucket
+	  - aws_secret_access_key: AWS Secret Access Key to add AWS S3 bucket
+	  - tenantID: Azure Tenant ID to add Azure Blob
+	  - azureclientID: Azure Client ID to add Azure Blob
+	  - Azureclientsecret: Azure Client Secret to add Azure Blob
+	  - azure_storage_key: Azure Storage Access Key to add Azure Blob
+	  - azure_storage_env: AzureCloud is the default in Azure.  More info in https://docs.kasten.io/latest/usage/configuration.html#azure-storage
+	  - project_id: Google Project ID to add Google Cloud Storage Account
+	  - LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10
+1. [For DR Cluster](playbook/dr_cluster/vars/vault_vars.yaml)
+	  - k10_infra: Choose between AWSEKS, AZAKS and GCGKE
+	  - aws_access_key_id: AWS Access Key to add AWS S3 bucket
+	  - aws_secret_access_key: AWS Secret Access Key to add AWS S3 bucket
+	  - tenantID: Azure Tenant ID to add Azure Blob
+	  - azureclientID: Azure Client ID to add Azure Blob
+	  - Azureclientsecret: Azure Client Secret to add Azure Blob
+	  - azure_storage_key: Azure Storage Access Key to add Azure Blob
+	  - azure_storage_env: AzureCloud is the default in Azure.  More info in https://docs.kasten.io/latest/usage/configuration.html#azure-storage
+	  - project_id: Google Project ID to add Google Cloud Storage Account
+	  - LOGIN: For K10 Basic Authentication.  Use 'htpasswd -n admin' and provide a password to autenticate to Kasten K10
 
 # Recovery duration
 
-The entire recovery process will take approx 30 minutes or more depending on the number of applications and data to recover. 
-
-# File structure and deployment workflow
-
-The Deployment consists thre main playbook triggering multible tasks:
-1. 01_k10_install.yaml: 
-	- This playbook installs a fresh Kasten K10 instance in the target Kubernetes cluster.
-1. 02_k10_dr_restore.yaml:
-	- This playbook creates the  Kubernetes Secret "k10-dr-secret" using the passphrase provided while enabling Disaster Recovery
-	- Then, this playbook creates a Location Profile using the provided Object Storage, which of course MUST contain the Kasten configuration backup (this is the Location Profile used when enabling the Kasten K10 Disaster Recovery in the Production Kubernetes cluster).  
-	- Finally this playbook restores the Kasten K10 configuration from the Location Profile created.
-1. 03_k10_restoreapps.yaml: 
-	- This playbook look for the most recent restore points available to restore the cluster-wide resources and each application.
-	- Then the playbook restore the cluster-wide resources from the most recent restore point found in previous step.
-	- Next the playbook creates a namespace for every application to be restored.
-	- Finally the playbook restore every application from the most recent restore point found in previous step.
-
-All these playbooks are available for all three Kubernetes deployments mentioned before:
-1. [AWS EKS](playbook/aws_eks/)
-1. [Azure AKS](playbook/azure_aks/)
-1. [Google Cloud GKE](playbook/google_gke/)
-
-Important: The playbooks must be run in the mentioned order in order to make the recovery process works.
-
+The entire recovery process will take approx 30 minutes plus the time required for applications and data to recover. 
