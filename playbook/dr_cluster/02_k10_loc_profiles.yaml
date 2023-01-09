@@ -1,0 +1,20 @@
+---
+- name: Kasten K10 Create location profile
+  hosts: localhost
+  collections:
+    - kubernetes.core
+  vars_files:
+    - vars/vault_vars.yaml     
+  tasks:
+    - name: Read buckets from CSV file and return a dictionary
+      read_csv:
+        path: vars/storage.csv
+        key: profile_type
+      register: profiles
+      delegate_to: localhost
+
+    - name: create location profiles
+      include_tasks: locprofiles/{{ profilek10.key }}_profile.yaml
+      loop: "{{ profiles.dict|dict2items }}" 
+      loop_control:
+        loop_var: profilek10 

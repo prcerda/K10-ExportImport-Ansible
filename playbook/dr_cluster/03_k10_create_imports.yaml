@@ -1,0 +1,20 @@
+---
+- name: K10 Policy Creation
+  hosts: localhost
+  collections:
+    - kubernetes.core
+  vars_files:
+    - vars/vault_vars.yaml    
+  tasks:
+    - name: Read buckets from CSV file and return a dictionary
+      read_csv:
+        path: createpolicy/import_details.csv
+        key: policy
+      register: import_string
+      delegate_to: localhost
+
+    - name: Create import policies for apps
+      include_tasks: createpolicy/importpolicy.yaml
+      loop: "{{ import_string.dict|dict2items }}" 
+      loop_control:
+        loop_var:  strings    

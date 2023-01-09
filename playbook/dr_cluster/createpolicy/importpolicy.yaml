@@ -1,0 +1,32 @@
+- name: "Create namespace for app  {{ strings.value.policy }}"
+  k8s:
+    name: "{{ strings.value.policy }}" # defining the namespace
+    api_version: v1
+    kind: Namespace
+    state: present
+  when: (strings.value.policy != "cluster")
+        
+- name: "Create import policy for app  {{ strings.value.policy }}"
+  kubernetes.core.k8s:
+    state: present
+    definition:
+        apiVersion: config.kio.kasten.io/v1alpha1
+        kind: Policy
+        metadata:
+          name: "{{ strings.value.policy + '-import' }}"
+          namespace: kasten-io
+        spec:
+          comment: Import Policy
+          frequency: "{{ '@' + strings.value.frequency }}"
+          actions:
+          - action: import
+            importParameters:
+              profile:
+                namespace: kasten-io
+                name: pcerdak10sa
+              receiveString: "{{ strings.value.string }}"
+          - action: restore
+            restoreParameters:
+              dataOnly: false
+              #restoreClusterResources: true
+              targetNamespace: "{{ strings.value.policy }}"              

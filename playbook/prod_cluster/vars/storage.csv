@@ -1,0 +1,4 @@
+profile_type,bucket_name,profile_name,region
+awss3,buckets3,profile01,eu-west-3
+azblob,bucketaz,profile02,na
+gcsa,bucketgcs,profile03,europe-west2

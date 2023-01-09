@@ -1,0 +1,31 @@
+apiVersion: config.kio.kasten.io/v1alpha1
+kind: PolicyPreset
+metadata:
+  name: monthly-policy-preset
+  namespace: kasten-io
+spec:
+  comment: Policy preset for daily backup
+  backup:
+    frequency: '@monthly'
+    subFrequency:
+      days: [30]      
+    backupWindow:
+        start:
+          hour: 22
+          minute: 30
+        end:
+          hour: 7
+          minute: 0          
+    retention:
+      monthly: 12
+      yearly: 3
+  export:
+    frequency: '@monthly'
+    exportData:
+      enabled: true
+    profile:
+      name: pcerdak10sa
+      namespace: kasten-io
+    retention:
+      monthly: 12
+      yearly: 3

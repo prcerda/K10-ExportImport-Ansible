@@ -1,0 +1,39 @@
+---
+- name: K10 Policy Creation
+  hosts: localhost
+  collections:
+    - kubernetes.core
+  tasks:
+    - name: Delete CSV file
+      ignore_errors: yes
+      file:
+        state: absent
+        path: createpolicy/import_details.csv
+      
+    - name: CSV - Create file and set the header
+      lineinfile:
+        dest: createpolicy/import_details.csv
+        line:
+          policy,string,frequency
+        create: yes
+        state: present    
+        
+    - name: Create Policy Presets from Files
+      kubernetes.core.k8s:
+        definition: "{{ lookup('template', '{{ item }}') | from_yaml }}"
+      with_fileglob:
+          - "policypresets/*.yaml"
+
+    - name: Get all applications in K8s
+      shell:
+         "kubectl get applications.apps.kio.kasten.io -A --no-headers | awk '{print $1}' | uniq"
+      register: apps
+
+    - name: Create policies for apps
+      include_tasks: createpolicy/apppolicy.yaml
+      loop: "{{ apps.stdout_lines | list }}"
+      loop_control:
+        loop_var: app_name
+ 
+    - name: create cluster backup policy
+      include_tasks: createpolicy/clusterpolicy.yaml           

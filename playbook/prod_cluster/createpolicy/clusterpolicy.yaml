@@ -1,0 +1,42 @@
+- name: "Create policy for cluster-wide resources"
+  kubernetes.core.k8s:
+    state: present
+    definition:
+        apiVersion: config.kio.kasten.io/v1alpha1
+        kind: Policy
+        metadata:
+          name: cluster-backup
+          namespace: kasten-io
+        spec:
+          comment: Backup Policy
+          presetRef:
+            name: daily-policy-preset
+            namespace: kasten-io
+          actions:
+          - action: backup
+          selector:
+            matchExpressions:
+            - key: k10.kasten.io/appNamespace
+              operator: In
+              values:
+              - kasten-io-cluster
+  
+- name: "Get import data from policy"
+  shell:
+     "kubectl get policy cluster-backup -n kasten-io --no-headers -o custom-columns='ImportData':.spec.actions[1].exportParameters.receiveString"
+  register: import_data
+
+- name: "Extracting policy string"
+  set_fact:
+    code: "{{ import_data.stdout }}"
+
+- name: Create CSV file with policy and import string
+  set_fact:
+    csv_tmp: >
+      cluster,{{ code }},daily
+
+- name: CSV - Write information into .csv file
+  lineinfile:
+    insertafter: EOF
+    dest: createpolicy/import_details.csv
+    line: "{{ csv_tmp }}"

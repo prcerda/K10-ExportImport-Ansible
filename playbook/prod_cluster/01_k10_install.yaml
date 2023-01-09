@@ -1,0 +1,39 @@
+---
+- name: K10 Deploy
+  hosts: localhost
+  vars_files:
+    - vars/vault_vars.yaml
+  vars:
+    helm_chart_url: "https://charts.kasten.io/"
+  collections:
+    - kubernetes.core
+  tasks:
+# Creating the namespace in the kubernete cluster
+    - name: Create Kasten K10 namespace
+      k8s:
+        name: kasten-io # defining the namespace
+        api_version: v1
+        kind: Namespace
+        state: present
+# Adding Helm repository for Kasten K10
+    - name: Add Kasten helm repo
+      kubernetes.core.helm_repository:
+        name: kasten
+        state: present
+        repo_url: '{{ helm_chart_url }}'
+      register: helmrepo
+
+# Installing Kasten K10 for Azure AKS
+    - name: Installing Kasten K10 for Azure AKS
+      include_tasks: installk10/k10_azure.yaml 
+      when: (k10_infra == "AZAKS" )
+      
+# Installing Kasten K10 for AWS EKS
+    - name: Installing Kasten K10 for AWS EKS
+      include_tasks: installk10/k10_aws.yaml 
+      when: (k10_infra == "AWSEKS" )
+
+# Installing Kasten K10 for Google Cloud GKE 
+    - name: Installing Kasten K10 for Google Cloud GKE
+      include_tasks: installk10/k10_gc.yaml 
+      when: (k10_infra == "GCGKE" )      

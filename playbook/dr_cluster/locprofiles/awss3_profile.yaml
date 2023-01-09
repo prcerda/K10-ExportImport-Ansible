@@ -1,0 +1,41 @@
+- name: CREATE AWS S3 SECRET
+  kubernetes.core.k8s:
+    state: present
+    definition: 
+      apiVersion: v1
+      kind: Secret
+      type: secrets.kanister.io/aws             
+      metadata:
+        name: "k10-{{ profilek10.value.profile_name }}-secret"
+        namespace: kasten-io     
+      data:
+        aws_access_key_id: "{{ aws_access_key_id|b64encode }}"
+        aws_secret_access_key: "{{ aws_secret_access_key|b64encode }}"            
+            
+
+# Creating an Location Profile with DR Data and Immutability
+- name: Creating an Location Profile with DR Data
+  kubernetes.core.k8s:
+    state: present
+    definition: 
+        apiVersion: config.kio.kasten.io/v1alpha1
+        kind: Profile
+        metadata:
+          name: "{{ profilek10.value.profile_name }}"
+          namespace: kasten-io
+        spec:
+          type: Location
+          locationSpec:
+            credential:
+              secretType: AwsAccessKey
+              secret:
+                apiVersion: v1
+                kind: Secret
+                name: "k10-{{ profilek10.value.profile_name }}-secret"
+                namespace: kasten-io
+            type: ObjectStore
+            objectStore:
+              name: "{{ profilek10.value.bucket_name }}"
+              objectStoreType: S3
+              region: "{{ profilek10.value.region }}"
+ 

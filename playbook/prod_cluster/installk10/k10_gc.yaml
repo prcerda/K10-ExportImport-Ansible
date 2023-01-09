@@ -1,0 +1,23 @@
+# Installing Kasten K10 for Google Cloud GKE
+- name: Get Google Cloud Service Account Key
+  shell:
+     "base64 -w0 vars/google-sa-key.json"
+  register: sa_key
+
+- name: Install Kasten K10 chart
+  kubernetes.core.helm:
+    name: k10
+    namespace: kasten-io
+    chart_ref: kasten/k10
+    wait: True
+    state: present
+    values:
+        secrets:
+            googleApiKey: "{{ sa_key.stdout }}"
+        externalGateway:
+            create: true
+        auth:
+            basicAuth:
+                enabled: true
+                htpasswd: "{{ LOGIN }}"
+  when: (sa_key.stdout)

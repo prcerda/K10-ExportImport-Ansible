@@ -1,0 +1,19 @@
+# Installing Kasten K10 for AWS EKS
+- name: Install Kasten K10 chart
+  kubernetes.core.helm:
+    name: k10
+    namespace: kasten-io
+    chart_ref: kasten/k10
+    wait: True
+    state: present
+    values:
+        secrets:
+            azureTenantId: "{{ tenantID }}"
+            azureClientId: "{{ azureclientID }}"
+            azureClientSecret: "{{ Azureclientsecret }}"
+        externalGateway:
+            create: true
+        auth:
+            basicAuth:
+                enabled: true
+                htpasswd: "{{ LOGIN }}"

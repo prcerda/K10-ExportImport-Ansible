@@ -1,0 +1,46 @@
+- name: get Google Storage Account Key
+  shell:
+     "base64 -w0 vars/google-sa-key.json"
+  register: sa_key
+
+- name: CREATE GCS Storage bucket SECRET
+  kubernetes.core.k8s:
+    state: present
+    definition: 
+      apiVersion: v1
+      kind: Secret
+      type: Opaque             
+      metadata:
+        name: "k10-{{ profilek10.value.profile_name }}-secret"
+        namespace: kasten-io     
+      data:
+        project-id: "{{ project_id|b64encode }}"
+        service-account.json: "{{ sa_key.stdout }}"            
+  when: (sa_key.stdout)            
+
+# Creating an Location Profile with DR Data and Immutability
+- name: Creating an Location Profile with DR Data
+  kubernetes.core.k8s:
+    state: present
+    definition: 
+        apiVersion: config.kio.kasten.io/v1alpha1
+        kind: Profile
+        metadata:
+          name: "{{ profilek10.value.profile_name }}"
+          namespace: kasten-io
+        spec:
+          type: Location
+          locationSpec:
+            credential:
+              secretType: GcpServiceAccountKey
+              secret:
+                apiVersion: v1
+                kind: Secret
+                name: "k10-{{ profilek10.value.profile_name }}-secret"
+                namespace: kasten-io
+            type: ObjectStore
+            objectStore:
+              name: "{{ profilek10.value.bucket_name }}"
+              objectStoreType: GCS 
+              region: "{{ profilek10.value.region }}"
+ 

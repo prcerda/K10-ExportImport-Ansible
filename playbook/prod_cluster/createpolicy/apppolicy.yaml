@@ -1,0 +1,54 @@
+- name: "Get backup frecuency for {{ app_name }} based on app labels"
+  shell:
+     "kubectl get ns {{ app_name }} -o json | jq .metadata.labels.backup"
+  register: frequency
+
+- name: "Removing quotes from variable"
+  set_fact:
+    preset_name: "{{ frequency.stdout[1:-1] }}"
+  when: (frequency.stdout != "null" )
+
+- name: "Create policy for app  {{ app_name }}"
+  kubernetes.core.k8s:
+    state: present
+    definition:
+        apiVersion: config.kio.kasten.io/v1alpha1
+        kind: Policy
+        metadata:
+          name: "{{ app_name + '-' + preset_name + '-backup' }}"
+          namespace: kasten-io
+        spec:
+          comment: Backup Policy
+          presetRef:
+            name: "{{ preset_name + '-policy-preset' }}"
+            namespace: kasten-io
+          actions:
+          - action: backup
+          selector:
+            matchLabels:
+              k10.kasten.io/appNamespace: "{{ app_name }}"
+  when: (frequency.stdout != "null" and app_name != "default" )
+
+- name: "Get import data from policy"
+  shell:
+     "kubectl get policy {{ app_name + '-' + preset_name + '-backup' }} -n kasten-io --no-headers -o custom-columns='ImportData':.spec.actions[1].exportParameters.receiveString"
+  register: import_data
+  when: (frequency.stdout != "null" and app_name != "default" )
+  
+- name: "Extracting policy string"
+  set_fact:
+    code: "{{ import_data.stdout }}"
+  when: (frequency.stdout != "null" and app_name != "default" )
+
+- name: Create CSV file with policy and import string
+  set_fact:
+    csv_tmp: >
+      {{ app_name }},{{ code }},{{ preset_name }}
+  when: (frequency.stdout != "null" and app_name != "default" )      
+
+- name: CSV - Write information into .csv file
+  lineinfile:
+    insertafter: EOF
+    dest: createpolicy/import_details.csv
+    line: "{{ csv_tmp }}" 
+  when: (frequency.stdout != "null" and app_name != "default" )      
