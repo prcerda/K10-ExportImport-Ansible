@@ -83,7 +83,7 @@ Using K10 Export policies involves the following sequence of actions:
 	  - backup=weekly for weekly backup
 	  - backup=monthly for monthly backup
 
-**NOTE**: The Export Policies playbook will create a CSV file with the name of the applications and the import string.  This file is called "importpolicy.yaml" and it's located in [Create Policy folder](playbook/prod_cluster/createpolicy).   This file MUST be copied to this location keeping the same name: [playbook/dr_cluster/createpolicy](playbook/dr_cluster/createpolicy)
+**NOTE**: The Export Policies playbook will create a CSV file with the name of the applications and the import string.  This file is called "importpolicy.yaml" and it's located in [Create Policy folder](playbook/prod_cluster/createpolicy).   This file MUST be copied to the following location keeping the same name: [playbook/dr_cluster/createpolicy](playbook/dr_cluster/createpolicy)
 
 All these steps will be automated using the Ansible playbooks provided for the [Production Cluster](playbook/prod_cluster)
 
