@@ -23,10 +23,18 @@
             importParameters:
               profile:
                 namespace: kasten-io
-                name: pcerdak10sa
+                name: "{{ locprofile }}"
               receiveString: "{{ strings.value.string }}"
           - action: restore
             restoreParameters:
               dataOnly: false
               #restoreClusterResources: true
               targetNamespace: "{{ strings.value.policy }}"              
+              transforms:
+              - json:
+                - op: replace
+                  path: /spec/storageClassName
+                  value: "{{ storageclass }}"
+                name: changeStorageClass
+                subject:
+                  resource: persistentvolumeclaims

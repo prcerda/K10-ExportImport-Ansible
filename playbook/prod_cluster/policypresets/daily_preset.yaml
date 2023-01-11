@@ -24,7 +24,7 @@ spec:
     exportData:
       enabled: true
     profile:
-      name: pcerdak10sa
+      name: "{{ locprofile }}"
       namespace: kasten-io
     retention:
       daily: 7

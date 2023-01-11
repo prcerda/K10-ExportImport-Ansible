@@ -3,6 +3,8 @@
   hosts: localhost
   collections:
     - kubernetes.core
+  vars_files:
+    - vars/vars.yaml
   tasks:
     - name: Delete CSV file
       ignore_errors: yes

@@ -4,7 +4,7 @@
   collections:
     - kubernetes.core
   vars_files:
-    - vars/vault_vars.yaml    
+    - vars/vars.yaml    
   tasks:
     - name: Read buckets from CSV file and return a dictionary
       read_csv:

@@ -1,0 +1,5 @@
+k10_infra: "AWSEKS"  # Choose between AWSEKS, AZAKS and GCGKE
+locprofile: "pcerda-k10"  #Name of the Location profile to be used for Export/Imports
+storageclass: "standard-rwo"  #Name of the Storage Class in the target Kubernetes cluster for importing applications-
+company: "Demolab"  #Company name for EULA
+email: "pcerda@demolab.com"  #E-Mail address for EULA

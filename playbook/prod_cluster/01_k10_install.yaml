@@ -3,6 +3,7 @@
   hosts: localhost
   vars_files:
     - vars/vault_vars.yaml
+    - vars/vars.yaml
   vars:
     helm_chart_url: "https://charts.kasten.io/"
   collections:
@@ -37,3 +38,17 @@
     - name: Installing Kasten K10 for Google Cloud GKE
       include_tasks: installk10/k10_gc.yaml 
       when: (k10_infra == "GCGKE" )      
+
+#  Accept EULA
+    - name: Accept Kasten EULA
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: k10-eula-info
+            namespace: kasten-io
+          data:
+            accepted: "true"
+            company: '{{ company }}'
+            email: '{{ email }}'
