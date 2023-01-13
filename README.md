@@ -109,6 +109,10 @@ Using K10 Import policies involves the following sequence of actions:
 
 All these steps will be automated using the Ansible playbooks provided for the [Production Cluster](playbook/prod_cluster)
 
+**Exporting Applications with Ansible playbooks in Video:**
+
+[![Alt text](https://img.youtube.com/vi/eOlxDl_fWRk/0.jpg)](https://www.youtube.com/watch?v=eOlxDl_fWRk)
+
 **Important**: The playbooks must be run in the mentioned order in order to make the recovery process works.
 
 ## Parameters
