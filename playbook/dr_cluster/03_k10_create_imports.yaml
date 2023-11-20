@@ -12,7 +12,6 @@
         key: policy
       register: import_string
       delegate_to: localhost
-
     - name: Create import policies for apps
       include_tasks: createpolicy/importpolicy.yaml
       loop: "{{ import_string.dict|dict2items }}" 

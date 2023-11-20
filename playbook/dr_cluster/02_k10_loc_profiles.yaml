@@ -12,7 +12,6 @@
         key: profile_type
       register: profiles
       delegate_to: localhost
-
     - name: create location profiles
       include_tasks: locprofiles/{{ profilek10.key }}_profile.yaml
       loop: "{{ profiles.dict|dict2items }}" 
