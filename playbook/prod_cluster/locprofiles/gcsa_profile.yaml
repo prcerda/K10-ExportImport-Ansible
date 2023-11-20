@@ -18,7 +18,7 @@
         service-account.json: "{{ sa_key.stdout }}"            
   when: (sa_key.stdout)            
 
-# Creating an Location Profile with DR Data and Immutability
+# Creating an Location Profile
 - name: Creating an Location Profile with DR Data
   kubernetes.core.k8s:
     state: present
